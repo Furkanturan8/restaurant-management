@@ -1,12 +1,15 @@
 package main
 
 import (
+	"database/sql"
 	"fmt"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/logger"
-	database "restaurant-management/database"
+	"restaurant-management/database"
+	"restaurant-management/handlers"
 	"restaurant-management/routes"
+	"restaurant-management/services"
 )
 
 func main() {
@@ -17,33 +20,50 @@ func main() {
 	app.Use(logger.New())
 
 	// DB Init
-	_, err := database.DBInstance()
+	db, err := database.DBInstance()
 	if err != nil {
 		fmt.Println(err)
 	}
 
-	// Burada örneğin spesifik bir tabloya ulaşmak istediğimizde OpenTable fonksiyonuna param. gireceğiz.
-	/*usersDB := db.OpenTable("users")
-	err = usersDB.Ping()
-	if err != nil {
-		return
-	}*/
-
-	// Define routes
-	routes.UserRoutes(app)
+	// Initialize services and handlers
+	initializeHandlers(app, db)
 
 	// Authentication middleware
 	// app.Use(middleware.Authentication())
-
-	routes.FoodRoutes(app)
-	routes.MenuRoutes(app)
-	routes.TableRoutes(app)
-	routes.OrderRoutes(app)
-	routes.OrderItemRoutes(app)
-	routes.InvoiceRoutes(app)
 
 	fmt.Println("\n-------------------------ELHAMDÜLİLLAH SORUN YOK-------------------------\n")
 
 	port := "3000"
 	err = app.Listen(":" + port)
+}
+
+func initializeHandlers(app *fiber.App, db *sql.DB) {
+	// Initialize all modules
+	userService := services.NewUserService(db)
+	userHandler := handlers.NewUserHandler(userService)
+	routes.UserRoutes(app, userHandler)
+
+	foodService := services.NewFoodService(db)
+	foodHandler := handlers.NewFoodHandler(foodService)
+	routes.FoodRoutes(app, foodHandler)
+
+	menuService := services.NewMenuService(db)
+	menuHandler := handlers.NewMenuHandler(menuService)
+	routes.MenuRoutes(app, menuHandler)
+
+	tableService := services.NewTableService(db)
+	tableHandler := handlers.NewTableHandler(tableService)
+	routes.TableRoutes(app, tableHandler)
+
+	orderService := services.NewOrderService(db)
+	orderHandler := handlers.NewOrderHandler(orderService)
+	routes.OrderRoutes(app, orderHandler)
+
+	orderItemService := services.NewOrderItemService(db)
+	orderItemHandler := handlers.NewOrderItemHandler(orderItemService)
+	routes.OrderItemRoutes(app, orderItemHandler)
+
+	invoiceService := services.NewInvoiceService(db)
+	invoiceHandler := handlers.NewInvoiceHandler(invoiceService)
+	routes.InvoiceRoutes(app, invoiceHandler)
 }

@@ -1,30 +1,41 @@
-package controllers
+package handlers
 
-import "github.com/gofiber/fiber/v2"
+import (
+	"github.com/gofiber/fiber/v2"
+	"restaurant-management/services"
+)
 
-func GetOrderItems(c *fiber.Ctx) error {
+type OrderItemHandler struct {
+	Service *services.OrderItemService
+}
+
+func NewOrderItemHandler(service *services.OrderItemService) *OrderItemHandler {
+	return &OrderItemHandler{Service: service}
+}
+
+func (oih *OrderItemHandler) GetOrderItems(c *fiber.Ctx) error {
 	// Handle GET /orderItems logic here
 	return c.SendString("GetOrderItems endpoint")
 }
 
-func GetOrderItem(c *fiber.Ctx) error {
+func (oih *OrderItemHandler) GetOrderItem(c *fiber.Ctx) error {
 	// Handle GET /orderItems/:orderItem_id logic here
 	orderItemID := c.Params("orderItem_id")
 	return c.SendString("GetOrderItem endpoint, orderItem ID: " + orderItemID)
 }
 
-func GetOrderItemsByOrder(c *fiber.Ctx) error {
+func (oih *OrderItemHandler) GetOrderItemsByOrder(c *fiber.Ctx) error {
 	// Handle GET /orderItems-order/:order_id logic here
 	orderID := c.Params("order_id")
 	return c.SendString("GetOrderItemsByOrder endpoint, order ID: " + orderID)
 }
 
-func CreateOrderItem(c *fiber.Ctx) error {
+func (oih *OrderItemHandler) CreateOrderItem(c *fiber.Ctx) error {
 	// Handle POST /orderItems logic here
 	return c.SendString("CreateOrderItem endpoint")
 }
 
-func UpdateOrderItem(c *fiber.Ctx) error {
+func (oih *OrderItemHandler) UpdateOrderItem(c *fiber.Ctx) error {
 	// Handle PATCH /orderItems/:orderItem_id logic here
 	orderItemID := c.Params("orderItem_id")
 	return c.SendString("UpdateOrderItem endpoint, orderItem ID: " + orderItemID)

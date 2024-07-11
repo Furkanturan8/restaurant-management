@@ -1,23 +1,34 @@
-package controllers
+package handlers
 
-import "github.com/gofiber/fiber/v2"
+import (
+	"github.com/gofiber/fiber/v2"
+	"restaurant-management/services"
+)
 
-func GetUsers(c *fiber.Ctx) error {
+type UserHandler struct {
+	Service *services.UserService
+}
+
+func NewUserHandler(service *services.UserService) *UserHandler {
+	return &UserHandler{Service: service}
+}
+
+func (uh *UserHandler) GetUsers(c *fiber.Ctx) error {
 	// Handle GET /users
 	return c.SendString("GetUsers endpoint")
 }
 
-func GetUser(c *fiber.Ctx) error {
+func (uh *UserHandler) GetUser(c *fiber.Ctx) error {
 	// Handle GET /users/:user_id
 	return c.SendString("GetUser endpoint")
 }
 
-func SignUp(c *fiber.Ctx) error {
+func (uh *UserHandler) SignUp(c *fiber.Ctx) error {
 	// Handle POST /users/signup
 	return c.SendString("SignUp endpoint")
 }
 
-func Login(c *fiber.Ctx) error {
+func (uh *UserHandler) Login(c *fiber.Ctx) error {
 	// Handle POST /users/login
 	return c.SendString("Login endpoint")
 }
