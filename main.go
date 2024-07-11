@@ -1,11 +1,11 @@
 package main
 
 import (
-	"database/sql"
 	"fmt"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/logger"
+	"gorm.io/gorm"
 	"restaurant-management/database"
 	"restaurant-management/handlers"
 	"restaurant-management/routes"
@@ -13,7 +13,7 @@ import (
 )
 
 func main() {
-	fmt.Println("\n--------------------------------BİSMİLLAH--------------------------------\n")
+	fmt.Println("\n------------------------BİSMİLLAH------------------------\n")
 	app := fiber.New()
 
 	// Logger middleware
@@ -31,13 +31,13 @@ func main() {
 	// Authentication middleware
 	// app.Use(middleware.Authentication())
 
-	fmt.Println("\n-------------------------ELHAMDÜLİLLAH SORUN YOK-------------------------\n")
+	fmt.Println("\n-----------------ELHAMDÜLİLLAH SORUN YOK-----------------\n")
 
 	port := "3000"
 	err = app.Listen(":" + port)
 }
 
-func initializeHandlers(app *fiber.App, db *sql.DB) {
+func initializeHandlers(app *fiber.App, db *gorm.DB) {
 	// Initialize all modules
 	userService := services.NewUserService(db)
 	userHandler := handlers.NewUserHandler(userService)

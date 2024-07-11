@@ -1,11 +1,13 @@
 package services
 
-import "database/sql"
+import (
+	"gorm.io/gorm"
+)
 
 type MenuService struct {
-	DB *sql.DB
+	DB *gorm.DB
 }
 
-func NewMenuService(db *sql.DB) *MenuService {
+func NewMenuService(db *gorm.DB) *MenuService {
 	return &MenuService{DB: db}
 }

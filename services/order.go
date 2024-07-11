@@ -1,12 +1,14 @@
 package services
 
-import "database/sql"
+import (
+	"gorm.io/gorm"
+)
 
 type OrderService struct {
-	DB *sql.DB
+	DB *gorm.DB
 }
 
-func NewOrderService(db *sql.DB) *OrderService {
+func NewOrderService(db *gorm.DB) *OrderService {
 	return &OrderService{
 		DB: db,
 	}

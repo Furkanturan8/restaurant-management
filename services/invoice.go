@@ -1,12 +1,14 @@
 package services
 
-import "database/sql"
+import (
+	"gorm.io/gorm"
+)
 
 type InvoiceService struct {
-	DB *sql.DB
+	DB *gorm.DB
 }
 
-func NewInvoiceService(db *sql.DB) *InvoiceService {
+func NewInvoiceService(db *gorm.DB) *InvoiceService {
 	return &InvoiceService{DB: db}
 }
 

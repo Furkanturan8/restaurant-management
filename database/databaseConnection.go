@@ -1,40 +1,44 @@
 package database
 
 import (
-	"database/sql"
 	"fmt"
-	"restaurant-management/pkg/config"
-	"time"
-
 	_ "github.com/go-sql-driver/mysql"
+	"gorm.io/driver/mysql"
+	"gorm.io/gorm"
+	"restaurant-management/models"
+	"restaurant-management/pkg/config"
 )
 
-func DBInstance() (*sql.DB, error) {
-	// Yapılandırma dosyasını yükle (db için gerekli parametreleri al)
+func DBInstance() (*gorm.DB, error) {
+	// Yapılandırma dosyasını yükle (db için gerekli parametreleri alıyoruz)
 	cfg, err := config.Load()
 	if err != nil {
 		return nil, fmt.Errorf("error loading configuration: %v", err)
 	}
 
 	// MySQL DSN oluştur
-	dsn := fmt.Sprintf("%s:%s@tcp(%s:%s)/%s",
+	dsn := fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?charset=utf8mb4&parseTime=True&loc=Local",
 		cfg.MySQLUsername, cfg.MySQLPassword, cfg.MySQLHost, cfg.MySQLPort, cfg.MySQLDBName)
 
 	// MySQL veritabanına bağlantı aç
-	db, err := sql.Open("mysql", dsn)
+	db, err := gorm.Open(mysql.Open(dsn), &gorm.Config{})
 	if err != nil {
 		return nil, fmt.Errorf("error opening database connection: %v", err)
 	}
 
-	// Bağlantı havuz parametrelerini ayarla
-	db.SetConnMaxLifetime(10 * time.Minute) // Bağlantı ömrünü sınırla
-	db.SetMaxOpenConns(10)                  // Max açık bağlantı sayısını sınırla
-	db.SetMaxIdleConns(5)                   // Veritabanı havuzundaki boş bağlantı sayısını sınırla
-
-	// Veritabanına ping atarak bağlantıyı test et
-	err = db.Ping()
+	// Automigrate models
+	err = db.AutoMigrate(
+		&models.User{},
+		&models.Table{},
+		&models.Menu{},
+		&models.Invoice{},
+		&models.Order{},
+		&models.OrderItem{},
+		&models.Note{},
+		&models.Food{},
+	)
 	if err != nil {
-		return nil, fmt.Errorf("error pinging database: %v", err)
+		return nil, fmt.Errorf("AutoMigrate failed: %v", err)
 	}
 
 	fmt.Printf("Connected to MySQL database: %s\n", cfg.MySQLDBName)
