@@ -35,6 +35,7 @@ func main() {
 
 	port := "3000"
 	err = app.Listen(":" + port)
+
 }
 
 func initializeHandlers(app *fiber.App, db *gorm.DB) {

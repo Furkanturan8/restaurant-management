@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"github.com/go-playground/validator/v10"
 	"github.com/gofiber/fiber/v2"
 	"log"
 	"restaurant-management/models"
@@ -9,11 +10,12 @@ import (
 )
 
 type FoodHandler struct {
-	Service *services.FoodService
+	Service   *services.FoodService
+	Validator *validator.Validate
 }
 
 func NewFoodHandler(service *services.FoodService) *FoodHandler {
-	return &FoodHandler{Service: service}
+	return &FoodHandler{Service: service, Validator: validator.New()}
 }
 
 func (fh *FoodHandler) GetFoods(c *fiber.Ctx) error {
@@ -58,6 +60,11 @@ func (fh *FoodHandler) CreateFood(c *fiber.Ctx) error {
 	var food models.Food
 	if err := c.BodyParser(&food); err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Geçersiz JSON formatı"})
+	}
+
+	// Validation
+	if err := fh.Validator.Struct(food); err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": err.Error()})
 	}
 
 	err := fh.Service.CreateFood(food)
