@@ -10,6 +10,7 @@ import (
 )
 
 func DBInstance() (*gorm.DB, error) {
+
 	// Yapılandırma dosyasını yükle (db için gerekli parametreleri alıyoruz)
 	cfg, err := config.Load()
 	if err != nil {

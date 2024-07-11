@@ -13,7 +13,7 @@ import (
 )
 
 func main() {
-	fmt.Println("\n------------------------BİSMİLLAH------------------------\n")
+	fmt.Println("\n-----------------------BİSMİLLAH-----------------------\n")
 	app := fiber.New()
 
 	// Logger middleware
@@ -31,7 +31,7 @@ func main() {
 	// Authentication middleware
 	// app.Use(middleware.Authentication())
 
-	fmt.Println("\n-----------------ELHAMDÜLİLLAH SORUN YOK-----------------\n")
+	fmt.Println("\n----------------ELHAMDÜLİLLAH SORUN YOK----------------\n")
 
 	port := "3000"
 	err = app.Listen(":" + port)

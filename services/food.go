@@ -30,6 +30,7 @@ func (fs *FoodService) GetFoods(offset, limit int) ([]model.Food, int64, error) 
 func (fs *FoodService) GetFoodByID(id int) (model.Food, error) {
 	var food model.Food
 	err := fs.DB.First(&food, id).Error
+
 	return food, err
 }
 
