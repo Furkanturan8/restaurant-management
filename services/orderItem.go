@@ -3,7 +3,6 @@ package services
 import (
 	"gorm.io/gorm"
 	model "restaurant-management/models"
-	"strconv"
 )
 
 type OrderItemService struct {
@@ -50,8 +49,6 @@ func (ois *OrderItemService) GetOrderItemByID(id int) (model.OrderItem, error) {
 }
 
 func (ois *OrderItemService) CreateOrderItem(orderItem model.OrderItem) error {
-	orderItem.OrderItemID = strconv.Itoa(int(orderItem.ID))
-
 	return ois.DB.Create(&orderItem).Error
 }
 
