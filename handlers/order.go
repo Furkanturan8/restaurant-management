@@ -1,36 +1,98 @@
 package handlers
 
 import (
+	"github.com/go-playground/validator/v10"
 	"github.com/gofiber/fiber/v2"
+	model "restaurant-management/models"
 	"restaurant-management/services"
+	"strconv"
+	"time"
 )
 
 type OrderHandler struct {
-	Service *services.OrderService
+	Service   *services.OrderService
+	Validator *validator.Validate
 }
 
 func NewOrderHandler(service *services.OrderService) *OrderHandler {
-	return &OrderHandler{Service: service}
+	return &OrderHandler{Service: service, Validator: validator.New()}
 }
 
 func (oh *OrderHandler) GetOrders(c *fiber.Ctx) error {
-	// Handle GET /orders
-	return c.SendString("GetOrders endpoint")
+
+	recordPerPage, err := strconv.Atoi(c.Query("recordPerPage", "10"))
+	if err != nil || recordPerPage < 1 {
+		recordPerPage = 10
+	}
+
+	page, err := strconv.Atoi(c.Query("page", "1"))
+	if err != nil || recordPerPage < 1 {
+		page = 1
+	}
+
+	startIndex := (page - 1) * recordPerPage
+
+	orders, total, err := oh.Service.GetOrders(startIndex, recordPerPage)
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Order items listelenirken hata oluştu!"})
+	}
+
+	return c.JSON(fiber.Map{"total_count": total, "order_items": orders})
+
 }
 
 func (oh *OrderHandler) GetOrder(c *fiber.Ctx) error {
-	// Handle GET /orders/:order_id
-	orderID := c.Params("order_id")
-	return c.SendString("GetOrder endpoint, order ID: " + orderID)
+	orderID, err := strconv.Atoi(c.Params("order_id"))
+	if err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Geçersiz Order ID"})
+	}
+
+	order, err := oh.Service.GetOrderByID(orderID)
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": err.Error()})
+	}
+
+	return c.JSON(fiber.Map{"order:": order})
 }
 
 func (oh *OrderHandler) CreateOrder(c *fiber.Ctx) error {
-	// Handle POST /orders
-	return c.SendString("CreateOrder endpoint")
+	var order model.Order
+	if err := c.BodyParser(&order); err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Geçersiz JSON formatı"})
+	}
+
+	if err := oh.Validator.Struct(order); err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": err.Error()})
+	}
+
+	now := time.Now()
+	order.CreatedAt = now
+	order.UpdatedAt = now // burada mesela null veya boş string olsun diyen olursa türü tarih old. için default olarak başlangıçta now yaptım
+
+	err := oh.Service.CreateOrder(order)
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Order oluşturulamadı!"})
+	}
+
+	return c.SendString("Yeni order oluşturuldu!")
 }
 
 func (oh *OrderHandler) UpdateOrder(c *fiber.Ctx) error {
-	// Handle PATCH /orders/:order_id
-	orderID := c.Params("order_id")
-	return c.SendString("UpdateOrder endpoint, order ID: " + orderID)
+	orderID, err := strconv.Atoi(c.Params("order_id"))
+	if err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Geçersiz Order ID"})
+	}
+
+	var order model.Order
+	if err := c.BodyParser(&order); err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": err.Error()})
+	}
+
+	order.ID = uint(orderID)
+	err = oh.Service.UpdateOrder(order)
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": err.Error()})
+	}
+
+	return c.JSON(fiber.Map{"message": "Order başarıyla güncellendi!"})
 }

@@ -21,8 +21,6 @@ func NewMenuHandler(service *services.MenuService) *MenuHandler {
 	}
 }
 
-// Todo : Diğer işlemler bitince, zaman aşımını ekle! Ayrıca create ederken validate işlemini ekle!
-
 func (mh *MenuHandler) GetMenus(c *fiber.Ctx) error {
 	// Pagination parameters
 	recordPerPage, err := strconv.Atoi(c.Query("recordPerPage", "10"))
@@ -99,6 +97,8 @@ func (mh *MenuHandler) UpdateMenu(c *fiber.Ctx) error {
 	}
 
 	menu.ID = uint(menuID)
+	menu.UpdatedAt = time.Now()
+
 	err = mh.Service.UpdateMenu(menu)
 	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": err.Error()})

@@ -12,8 +12,10 @@ import (
 	"restaurant-management/services"
 )
 
+// todo: yeni bir model eklediğimde/güncellediğimde gelen verileri kontrol et (boş verileri de ekliyor)!
+
 func main() {
-	fmt.Println("\n-----------------------BİSMİLLAH-----------------------\n")
+	fmt.Println("\n--------------BİSMİLLAH--------------\n")
 	app := fiber.New()
 
 	// Logger middleware
@@ -31,7 +33,7 @@ func main() {
 	// Authentication middleware
 	// app.Use(middleware.Authentication())
 
-	fmt.Println("\n----------------ELHAMDÜLİLLAH SORUN YOK----------------\n")
+	fmt.Println("\n-------------------------------------\n")
 
 	port := "3000"
 	err = app.Listen(":" + port)
