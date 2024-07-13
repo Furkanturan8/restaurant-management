@@ -42,6 +42,5 @@ func (is *InvoiceService) CreateInvoice(invoice model.Invoice) error {
 }
 
 func (is *InvoiceService) UpdateInvoice(invoice model.Invoice) error {
-	return is.DB.Model(&model.Invoice{}).Where("invoice_id = ?", invoice.InvoiceID).Omit("created_at").Updates(invoice).Error
-
+	return is.DB.Model(&invoice).Omit("created_at").Updates(invoice).Error
 }

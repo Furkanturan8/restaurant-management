@@ -13,8 +13,6 @@ func NewFoodService(db *gorm.DB) *FoodService {
 	return &FoodService{DB: db}
 }
 
-// food db işlemleri yapılacak
-
 func (fs *FoodService) GetFoods(offset, limit int) ([]model.Food, int64, error) {
 	var foods []model.Food
 	var total int64 // toplam food sayısı

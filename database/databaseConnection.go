@@ -35,7 +35,6 @@ func DBInstance() (*gorm.DB, error) {
 		&models.Invoice{},
 		&models.Order{},
 		&models.OrderItem{},
-		&models.Note{},
 		&models.Food{},
 	)
 	if err != nil {

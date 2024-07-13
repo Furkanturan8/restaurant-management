@@ -41,6 +41,6 @@ func (ts *TableService) CreateTable(table model.Table) error {
 	return ts.DB.Create(&table).Error
 }
 
-func (ts *TableService) UpdateTable(tableId int, table model.Table) error {
-	return ts.DB.Model(&model.Table{}).Where("table_id = ?", tableId).Omit("created_at").Updates(table).Error
+func (ts *TableService) UpdateTable(table model.Table) error {
+	return ts.DB.Model(&table).Omit("created_at").Updates(table).Error
 }

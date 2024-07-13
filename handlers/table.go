@@ -3,10 +3,10 @@ package handlers
 import (
 	"github.com/go-playground/validator/v10"
 	"github.com/gofiber/fiber/v2"
+	helper "restaurant-management/helpers"
 	model "restaurant-management/models"
 	"restaurant-management/services"
 	"strconv"
-	"time"
 )
 
 type TableHandler struct {
@@ -19,17 +19,8 @@ func NewTableHandler(service *services.TableService) *TableHandler {
 }
 
 func (th *TableHandler) GetTables(c *fiber.Ctx) error {
-	recordPerPage, err := strconv.Atoi(c.Query("recordPerPage", "10"))
-	if err != nil || recordPerPage < 1 {
-		recordPerPage = 10
-	}
+	startIndex, recordPerPage := helper.Pagination(c)
 
-	page, err := strconv.Atoi(c.Query("page", "1"))
-	if err != nil || page < 1 {
-		page = 1
-	}
-
-	startIndex := (page - 1) * recordPerPage
 	tables, total, err := th.Service.GetTables(startIndex, recordPerPage)
 	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Tables Listelenirken Hata Oluştu!"})
@@ -65,9 +56,10 @@ func (th *TableHandler) CreateTable(c *fiber.Ctx) error {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": err.Error()})
 	}
 
-	now := time.Now()
-	table.CreatedAt = now
-	table.UpdatedAt = now
+	// Kontrol: createdAt veya updatedAt alanları girilmişse hata ver
+	if !table.CreatedAt.IsZero() || !table.UpdatedAt.IsZero() {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "createdAt veya updatedAt alanları manuel olarak doldurulamaz"})
+	}
 
 	err := th.Service.CreateTable(table)
 	if err != nil {
@@ -88,9 +80,8 @@ func (th *TableHandler) UpdateTable(c *fiber.Ctx) error {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": err.Error()})
 	}
 
-	table.UpdatedAt = time.Now()
-
-	err = th.Service.UpdateTable(tableID, table)
+	table.TableID = uint(tableID)
+	err = th.Service.UpdateTable(table)
 	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": err.Error()})
 	}

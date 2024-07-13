@@ -12,8 +12,8 @@ import (
 	"restaurant-management/services"
 )
 
-// todo: yeni bir model eklediğimde/güncellediğimde gelen verileri kontrol et (boş verileri de ekliyor)!
-// todo: orderItem da id sorunu var gibi (o kadar çok şey varki gece gece kafa karıştı la!)
+// todo: yeni bir model eklediğimde/güncellediğimde gelen verileri kontrol et/validation işlemleri (boş verileri de ekliyor)!
+
 func main() {
 	fmt.Println("\n--------------BİSMİLLAH--------------\n")
 	app := fiber.New()

@@ -53,5 +53,5 @@ func (ois *OrderItemService) CreateOrderItem(orderItem model.OrderItem) error {
 }
 
 func (ois *OrderItemService) UpdateOrderItem(orderItem model.OrderItem) error {
-	return ois.DB.Model(&model.OrderItem{}).Where("order_item_id = ?", orderItem.ID).Omit("created_at").Updates(orderItem).Error
+	return ois.DB.Model(&orderItem).Omit("created_at").Updates(orderItem).Error
 }

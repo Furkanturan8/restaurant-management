@@ -3,10 +3,10 @@ package handlers
 import (
 	"github.com/go-playground/validator/v10"
 	"github.com/gofiber/fiber/v2"
+	helper "restaurant-management/helpers"
 	model "restaurant-management/models"
 	"restaurant-management/services"
 	"strconv"
-	"time"
 )
 
 type OrderHandler struct {
@@ -19,18 +19,7 @@ func NewOrderHandler(service *services.OrderService) *OrderHandler {
 }
 
 func (oh *OrderHandler) GetOrders(c *fiber.Ctx) error {
-
-	recordPerPage, err := strconv.Atoi(c.Query("recordPerPage", "10"))
-	if err != nil || recordPerPage < 1 {
-		recordPerPage = 10
-	}
-
-	page, err := strconv.Atoi(c.Query("page", "1"))
-	if err != nil || recordPerPage < 1 {
-		page = 1
-	}
-
-	startIndex := (page - 1) * recordPerPage
+	startIndex, recordPerPage := helper.Pagination(c)
 
 	orders, total, err := oh.Service.GetOrders(startIndex, recordPerPage)
 	if err != nil {
@@ -65,9 +54,10 @@ func (oh *OrderHandler) CreateOrder(c *fiber.Ctx) error {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": err.Error()})
 	}
 
-	now := time.Now()
-	order.CreatedAt = now
-	order.UpdatedAt = now // burada mesela null veya boş string olsun diyen olursa türü tarih old. için default olarak başlangıçta now yaptım
+	// Kontrol: createdAt veya updatedAt alanları girilmişse hata ver
+	if !order.CreatedAt.IsZero() || !order.UpdatedAt.IsZero() {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "createdAt veya updatedAt alanları manuel olarak doldurulamaz"})
+	}
 
 	err := oh.Service.CreateOrder(order)
 	if err != nil {
@@ -88,7 +78,7 @@ func (oh *OrderHandler) UpdateOrder(c *fiber.Ctx) error {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": err.Error()})
 	}
 
-	order.ID = uint(orderID)
+	order.OrderID = uint(orderID)
 	err = oh.Service.UpdateOrder(order)
 	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": err.Error()})

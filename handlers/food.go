@@ -4,6 +4,7 @@ import (
 	"github.com/go-playground/validator/v10"
 	"github.com/gofiber/fiber/v2"
 	"log"
+	helper "restaurant-management/helpers"
 	"restaurant-management/models"
 	"restaurant-management/services"
 	"strconv"
@@ -19,17 +20,7 @@ func NewFoodHandler(service *services.FoodService) *FoodHandler {
 }
 
 func (fh *FoodHandler) GetFoods(c *fiber.Ctx) error {
-	recordPerPage, err := strconv.Atoi(c.Query("recordPerPage", "10"))
-	if err != nil || recordPerPage < 1 {
-		recordPerPage = 10
-	}
-
-	page, err := strconv.Atoi(c.Query("page", "1"))
-	if err != nil || page < 1 {
-		page = 1
-	}
-
-	startIndex := (page - 1) * recordPerPage
+	startIndex, recordPerPage := helper.Pagination(c)
 
 	foods, total, err := fh.Service.GetFoods(startIndex, recordPerPage)
 	if err != nil {
@@ -67,6 +58,11 @@ func (fh *FoodHandler) CreateFood(c *fiber.Ctx) error {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": err.Error()})
 	}
 
+	// Kontrol: createdAt veya updatedAt alanları girilmişse hata ver
+	if !food.CreatedAt.IsZero() || !food.UpdatedAt.IsZero() {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "createdAt veya updatedAt alanları manuel olarak doldurulamaz"})
+	}
+
 	err := fh.Service.CreateFood(food)
 	if err != nil {
 		log.Printf("Food oluşturulurken hata oluştu: %v\n", err)
@@ -88,7 +84,7 @@ func (fh *FoodHandler) UpdateFood(c *fiber.Ctx) error {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": err.Error()})
 	}
 
-	food.ID = uint(foodID)
+	food.FoodID = uint(foodID)
 	err = fh.Service.UpdateFood(food)
 	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": err.Error()})

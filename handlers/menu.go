@@ -3,10 +3,10 @@ package handlers
 import (
 	"github.com/go-playground/validator/v10"
 	"github.com/gofiber/fiber/v2"
+	helper "restaurant-management/helpers"
 	"restaurant-management/models"
 	"restaurant-management/services"
 	"strconv"
-	"time"
 )
 
 type MenuHandler struct {
@@ -22,18 +22,7 @@ func NewMenuHandler(service *services.MenuService) *MenuHandler {
 }
 
 func (mh *MenuHandler) GetMenus(c *fiber.Ctx) error {
-	// Pagination parameters
-	recordPerPage, err := strconv.Atoi(c.Query("recordPerPage", "10"))
-	if err != nil || recordPerPage < 1 {
-		recordPerPage = 10
-	}
-
-	page, err := strconv.Atoi(c.Query("page", "1"))
-	if err != nil || page < 1 {
-		page = 1
-	}
-
-	startIndex := (page - 1) * recordPerPage
+	startIndex, recordPerPage := helper.Pagination(c)
 
 	menus, total, err := mh.Service.GetMenus(startIndex, recordPerPage)
 	if err != nil {
@@ -60,7 +49,6 @@ func (mh *MenuHandler) GetMenu(c *fiber.Ctx) error {
 }
 
 func (mh *MenuHandler) CreateMenu(c *fiber.Ctx) error {
-
 	var menu models.Menu
 	if err := c.BodyParser(&menu); err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Geçersiz JSON formatı"})
@@ -71,10 +59,10 @@ func (mh *MenuHandler) CreateMenu(c *fiber.Ctx) error {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": err.Error()})
 	}
 
-	// Set created_at and updated_at
-	now := time.Now()
-	menu.CreatedAt = now
-	menu.UpdatedAt = now
+	// Kontrol: createdAt veya updatedAt alanları girilmişse hata ver
+	if !menu.CreatedAt.IsZero() || !menu.UpdatedAt.IsZero() {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "createdAt veya updatedAt alanları manuel olarak doldurulamaz"})
+	}
 
 	err := mh.Service.CreateMenu(menu)
 	if err != nil {
@@ -85,7 +73,6 @@ func (mh *MenuHandler) CreateMenu(c *fiber.Ctx) error {
 }
 
 func (mh *MenuHandler) UpdateMenu(c *fiber.Ctx) error {
-
 	menuID, err := strconv.Atoi(c.Params("menu_id"))
 	if err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Geçersiz menu ID"})
@@ -96,9 +83,7 @@ func (mh *MenuHandler) UpdateMenu(c *fiber.Ctx) error {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": err.Error()})
 	}
 
-	menu.ID = uint(menuID)
-	menu.UpdatedAt = time.Now()
-
+	menu.MenuID = uint(menuID)
 	err = mh.Service.UpdateMenu(menu)
 	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": err.Error()})

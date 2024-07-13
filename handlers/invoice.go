@@ -3,11 +3,10 @@ package handlers
 import (
 	"github.com/go-playground/validator/v10"
 	"github.com/gofiber/fiber/v2"
-	"log"
+	helper "restaurant-management/helpers"
 	model "restaurant-management/models"
 	"restaurant-management/services"
 	"strconv"
-	"time"
 )
 
 type InvoiceHandler struct {
@@ -20,17 +19,8 @@ func NewInvoiceHandler(service *services.InvoiceService) *InvoiceHandler {
 }
 
 func (ih *InvoiceHandler) GetInvoices(c *fiber.Ctx) error {
-	recordPerPage, err := strconv.Atoi(c.Query("recordPerPage", "10"))
-	if err != nil || recordPerPage < 1 {
-		recordPerPage = 10
-	}
 
-	page, err := strconv.Atoi(c.Query("page", "1"))
-	if err != nil || page < 1 {
-		page = 1
-	}
-
-	startIndex := (page - 1) * recordPerPage
+	startIndex, recordPerPage := helper.Pagination(c)
 
 	invoices, total, err := ih.Service.GetInvoices(startIndex, recordPerPage)
 	if err != nil {
@@ -73,10 +63,10 @@ func (ih *InvoiceHandler) CreateInvoice(c *fiber.Ctx) error {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": err.Error()})
 	}
 
-	// Set created_at and updated_at
-	now := time.Now()
-	invoice.CreatedAt = now
-	invoice.UpdatedAt = now
+	// Kontrol: createdAt veya updatedAt alanları girilmişse hata ver
+	if !invoice.CreatedAt.IsZero() || !invoice.UpdatedAt.IsZero() {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "createdAt veya updatedAt alanları manuel olarak doldurulamaz"})
+	}
 
 	err := ih.Service.CreateInvoice(invoice)
 	if err != nil {
@@ -101,15 +91,11 @@ func (ih *InvoiceHandler) UpdateInvoice(c *fiber.Ctx) error {
 	}
 
 	// Validation
-	validate := validator.New()
-	err = validate.Struct(invoice)
-	if err != nil {
-		log.Fatal("Validation error:", err)
+	if err := ih.Validator.Struct(invoice); err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": err.Error()})
 	}
 
-	invoice.InvoiceID = strconv.Itoa(invoiceID)
-	invoice.UpdatedAt = time.Now()
-
+	invoice.InvoiceID = uint(invoiceID)
 	err = ih.Service.UpdateInvoice(invoice)
 	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": err.Error()})

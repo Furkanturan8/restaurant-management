@@ -3,10 +3,10 @@ package handlers
 import (
 	"github.com/go-playground/validator/v10"
 	"github.com/gofiber/fiber/v2"
+	helper "restaurant-management/helpers"
 	"restaurant-management/models"
 	"restaurant-management/services"
 	"strconv"
-	"time"
 )
 
 type OrderItemHandler struct {
@@ -19,17 +19,8 @@ func NewOrderItemHandler(service *services.OrderItemService) *OrderItemHandler {
 }
 
 func (oih *OrderItemHandler) GetOrderItems(c *fiber.Ctx) error {
-	recordPerPage, err := strconv.Atoi(c.Query("recordPerPage", "10"))
-	if err != nil || recordPerPage < 1 {
-		recordPerPage = 10
-	}
+	startIndex, recordPerPage := helper.Pagination(c)
 
-	page, err := strconv.Atoi(c.Query("page", "1"))
-	if err != nil || page < 1 {
-		page = 1
-	}
-
-	startIndex := (page - 1) * recordPerPage
 	orderItems, total, err := oih.Service.GetOrderItems(startIndex, recordPerPage)
 	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Order Items Listelenirken Hata Oluştu!"})
@@ -77,9 +68,10 @@ func (oih *OrderItemHandler) CreateOrderItem(c *fiber.Ctx) error {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": err.Error()})
 	}
 
-	now := time.Now()
-	orderItem.CreatedAt = now
-	orderItem.UpdatedAt = now
+	// Kontrol: createdAt veya updatedAt alanları girilmişse hata ver
+	if !orderItem.CreatedAt.IsZero() || !orderItem.UpdatedAt.IsZero() {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "createdAt veya updatedAt alanları manuel olarak doldurulamaz"})
+	}
 
 	err := oih.Service.CreateOrderItem(orderItem)
 	if err != nil {
@@ -100,9 +92,7 @@ func (oih *OrderItemHandler) UpdateOrderItem(c *fiber.Ctx) error {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": err.Error()})
 	}
 
-	orderItem.ID = uint(orderItemID)
-	orderItem.UpdatedAt = time.Now()
-
+	orderItem.OrderItemID = uint(orderItemID)
 	err = oih.Service.UpdateOrderItem(orderItem)
 	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": err.Error()})
