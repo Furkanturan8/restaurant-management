@@ -8,11 +8,10 @@ import (
 	"gorm.io/gorm"
 	"restaurant-management/database"
 	"restaurant-management/handlers"
+	"restaurant-management/middleware"
 	"restaurant-management/routes"
 	"restaurant-management/services"
 )
-
-// todo: yeni bir model eklediğimde/güncellediğimde gelen verileri kontrol et/validation işlemleri (boş verileri de ekliyor)!
 
 func main() {
 	fmt.Println("\n--------------BİSMİLLAH--------------\n")
@@ -31,7 +30,7 @@ func main() {
 	initializeHandlers(app, db)
 
 	// Authentication middleware
-	// app.Use(middleware.Authentication())
+	app.Use(middleware.Authentication())
 
 	fmt.Println("\n-------------------------------------\n")
 

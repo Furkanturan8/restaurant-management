@@ -10,4 +10,5 @@ func UserRoutes(app *fiber.App, userHandler *handlers.UserHandler) {
 	app.Get("/users/:user_id", userHandler.GetUser)
 	app.Post("/users/signup", userHandler.SignUp)
 	app.Post("/users/login", userHandler.Login)
+	app.Post("users/logout/:user_id", userHandler.LogOut)
 }
