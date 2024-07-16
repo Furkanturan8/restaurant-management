@@ -26,24 +26,22 @@ func main() {
 		fmt.Println(err)
 	}
 
-	// Initialize services and handlers
-	initializeHandlers(app, db)
+	userService := services.NewUserService(db)
+	userHandler := handlers.NewUserHandler(userService)
+	routes.UserRoutes(app, userHandler)
 
 	// Authentication middleware
 	app.Use(middleware.Authentication())
 
-	fmt.Println("\n-------------------------------------\n")
+	// Initialize services and handlers
+	initializeHandlers(app, db)
 
 	port := "3000"
 	err = app.Listen(":" + port)
-
 }
 
 func initializeHandlers(app *fiber.App, db *gorm.DB) {
 	// Initialize all modules
-	userService := services.NewUserService(db)
-	userHandler := handlers.NewUserHandler(userService)
-	routes.UserRoutes(app, userHandler)
 
 	foodService := services.NewFoodService(db)
 	foodHandler := handlers.NewFoodHandler(foodService)

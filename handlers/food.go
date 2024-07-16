@@ -47,7 +47,6 @@ func (fh *FoodHandler) GetFood(c *fiber.Ctx) error {
 }
 
 func (fh *FoodHandler) CreateFood(c *fiber.Ctx) error {
-
 	var food models.Food
 	if err := c.BodyParser(&food); err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Geçersiz JSON formatı"})
@@ -73,7 +72,6 @@ func (fh *FoodHandler) CreateFood(c *fiber.Ctx) error {
 }
 
 func (fh *FoodHandler) UpdateFood(c *fiber.Ctx) error {
-
 	foodID, err := strconv.Atoi(c.Params("food_id"))
 	if err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Geçersiz food ID"})

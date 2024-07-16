@@ -68,6 +68,10 @@ func (ih *InvoiceHandler) CreateInvoice(c *fiber.Ctx) error {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "createdAt veya updatedAt alanları manuel olarak doldurulamaz"})
 	}
 
+	if *invoice.PaymentMethod == "" || *invoice.PaymentStatus == "" {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "PaymentMethod ve PaymentStatus boş bırakılamaz!"})
+	}
+
 	err := ih.Service.CreateInvoice(invoice)
 	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Invoice oluşturulurken hata oluştu!"})
@@ -75,8 +79,6 @@ func (ih *InvoiceHandler) CreateInvoice(c *fiber.Ctx) error {
 
 	return c.SendString("Yeni invoice oluşturuldu!")
 }
-
-// todo : update ve create ederken boş değer olsa bile sorun çıkarmıyor, bunu düzelt!
 
 func (ih *InvoiceHandler) UpdateInvoice(c *fiber.Ctx) error {
 

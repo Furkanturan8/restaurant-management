@@ -107,6 +107,22 @@ func (uh *UserHandler) Login(c *fiber.Ctx) error {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Tokenlar güncellenemedi"})
 	}
 
+	c.Cookie(&fiber.Cookie{
+		Name:     "token",
+		Value:    token,
+		Expires:  time.Now().Add(time.Hour * 24), // 24 saatlik geçerlilik süresi
+		HTTPOnly: true,
+		Secure:   false, // Sadece HTTPS üzerinden gönderilsin
+	})
+
+	c.Cookie(&fiber.Cookie{
+		Name:     "refresh_token",
+		Value:    refreshToken,
+		Expires:  time.Now().Add(time.Hour * 24 * 7), // 7 günlük geçerlilik süresi
+		HTTPOnly: true,
+		Secure:   false, // Sadece HTTPS üzerinden gönderilsin
+	})
+
 	foundUser.Password = nil
 
 	return c.JSON(fiber.Map{
@@ -117,15 +133,37 @@ func (uh *UserHandler) Login(c *fiber.Ctx) error {
 }
 
 func (uh *UserHandler) LogOut(c *fiber.Ctx) error {
-	userID, err := strconv.Atoi(c.Params("user_id"))
+	userID, _ := strconv.Atoi(c.Params("user_id"))
+	user, err := uh.Service.GetUserByID(userID)
 	if err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Geçersiz user ID"})
 	}
+
+	fmt.Println("token:", *user.Token)
+	fmt.Println("tokenRef:", *user.RefreshToken)
+	fmt.Println("email:", *user.Email)
 
 	err = uh.Service.ClearTokens(uint(userID))
 	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Çıkış yapılamadı"})
 	}
+
+	// Token cookie'lerini sil
+	c.Cookie(&fiber.Cookie{
+		Name:     "token",
+		Value:    "",
+		Expires:  time.Now().Add(-time.Hour), // Geçmiş bir süre sonu
+		HTTPOnly: true,
+		Secure:   false, // HTTPS gereksinimi yok
+	})
+
+	c.Cookie(&fiber.Cookie{
+		Name:     "refresh_token",
+		Value:    "",
+		Expires:  time.Now().Add(-time.Hour), // Geçmiş bir süre sonu
+		HTTPOnly: true,
+		Secure:   false, // HTTPS gereksinimi yok
+	})
 
 	return c.JSON(fiber.Map{"message": "Başarıyla çıkış yapıldı"})
 }
@@ -141,11 +179,7 @@ func HashPassword(password string) (string, error) {
 
 func VerifyPassword(userPassword string, providedPassword string) bool {
 	err := bcrypt.CompareHashAndPassword([]byte(providedPassword), []byte(userPassword))
-	check := true
+	check := err == nil
 
-	if err != nil {
-		fmt.Sprintf("login or password is incorrect")
-		check = false
-	}
 	return check
 }
